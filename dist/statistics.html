@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    
+    <title>心窩打卡後台</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark main-navbar">
+      <a class="navbar-brand" href="./index.html">心窩打卡後台</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="./index.html">首頁</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="./statistics.html">遲到統計<span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./current-shifts.html">值班班表調整</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./search_logs.html">打卡紀錄搜尋</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="row">
+      <div class="col-2"></div>
+      
+      <div class="col-3 statistics-main-content">
+        <form id="start-date-form">
+          <div class="form-row justify-content-center">
+    
+            <div class="col-4 my-1">
+              <select id="start-date-select-month" class="form-control">
+                <option selected>開始月份</option>
+              </select>
+            </div>
+    
+            <div class="col-4 my-1">
+              <select id="start-date-select-day" class="form-control">
+                <option selected>開始日期</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <form id="end-date-form">
+          <div class="form-row justify-content-center">
+    
+            <div class="col-4 my-1">
+              <select id="end-date-select-month" class="form-control">
+                <option selected>結束月份</option>
+              </select>
+            </div>
+    
+            <div class="col-4 my-1">
+              <select id="end-date-select-day" class="form-control">
+                <option selected>結束日期</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <div id="filter-btn">
+          <div class="text-center">
+              <button id="sendButton" type="button submit" class="btn btn-primary btn-lg text-center" onclick="Lib.statistics.clearStatistics()">篩選</button>
+          </div>
+        </div>
+
+        <div id="loading-hint" class="text-center">載入中...</div>
+      </div>
+      
+      <div class="col statistics-main-content">
+        <div id="rank-list">
+          <!-- <div class="row">
+            <div class="rank-list-row-text">jason</div>
+            <div class="rank-list-row-text">120</div>
+            <div class="" style="width: 50%; background-color: rgb(40, 167, 69);"></div>
+          </div> -->
+        </div>
+        <p id="no-item">此區間沒有紀錄</p>
+      </div>
+
+      <div class="col-3"></div>
+    </div>
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.717.0.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="./statistics.bundle.js"></script>
+    <script>
+      window.onload = function () {
+        console.log(Lib);
+        Lib.statistics.fetchAllShifts();
+        // Lib.fetchAllShifts();
+        Lib.statistics.populateDateForm();
+        // Lib.populateDateForm();
+      };
+    </script>
+  </body>
+</html>

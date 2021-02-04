@@ -1,0 +1,56 @@
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #bbbbbb;
+    background-color: #E5E3E6;
+    padding: 8px;
+    width: 2rem;
+    text-align: center;
+}
+
+#btn-group {
+    margin: 0 0 1.3rem 0;
+    padding: 0 6rem 0 6rem;
+}
+
+.date-cell {
+    width: 17.4%;    
+}
+
+.hour-cell {
+    width: 13%;
+    height: 3.5rem;
+}
+
+.shift-cell {
+    width: 17.4%;
+    height: 3.5rem;
+}
+
+.singleShiftDiv {
+    border-left: -2rem;
+    border-right: -2rem;
+}
+
+#status {
+    margin-left: 2rem;
+    padding-right: 15rem;
+    padding-top: 10rem;
+}
+
+#status-string, #status-penalty {
+    font-size: 1.5rem;
+}
+
+#update-status-form {
+    margin-top: 1rem;
+    display: none;
+}
+
+tr:nth-child(even) {
+    /* background-color: #dddddd; */
+}

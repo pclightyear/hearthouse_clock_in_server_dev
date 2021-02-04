@@ -1,0 +1,32 @@
+.search-logs-main-content {
+    padding-top: 2rem;
+}
+
+#name-form {
+    margin-top: 1.5rem;
+    display: none;
+}
+
+#filter-btn {
+    display: none;
+    margin-top: 1.8rem;
+}
+
+#log-list {
+    font-size: 1.3rem;
+}
+
+.log-list-row {
+    /* margin-top: 0.75rem; */
+    margin-bottom: 0.8rem;
+}
+
+.log-list-row-text { 
+    padding-right: 1.3rem;
+}
+
+#no-item {
+    display: none;
+    font-size: 1.8rem;
+    font-weight: 700;
+}

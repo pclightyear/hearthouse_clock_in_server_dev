@@ -1,0 +1,18 @@
+.form-element {
+    /* margin-top: 0.5rem; */
+    /* margin-bottom: 0.5rem; */
+}
+
+#date-form {
+    margin-top: 3rem;
+}
+
+#send-btn {
+    display: none;
+}
+
+#new-line-btn {
+    display: none;
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+}

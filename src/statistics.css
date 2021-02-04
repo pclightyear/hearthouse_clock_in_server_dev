@@ -1,0 +1,28 @@
+.statistics-main-content {
+    padding-top: 2rem;
+}
+
+#filter-btn {
+    display: none;
+    margin-top: 1.8rem;
+}
+
+#rank-list {
+    font-size: 1.3rem;
+}
+
+.rank-list-row {
+    /* margin-top: 0.75rem; */
+    margin-bottom: 0.8rem;
+}
+
+.rank-list-row-text { 
+    width: 4rem;
+    padding-right: 1.3rem;
+}
+
+#no-item {
+    display: none;
+    font-size: 1.8rem;
+    font-weight: 700;
+}

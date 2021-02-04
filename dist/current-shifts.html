@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    
+    <title>心窩打卡後台</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav id="shifts-navbar" class="navbar navbar-expand-lg navbar-dark main-navbar">
+      <a class="navbar-brand" href="./index.html">心窩打卡後台</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="./index.html">首頁</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./statistics.html">遲到統計</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="./current-shifts.html">值班班表調整<span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./search_logs.html">打卡紀錄搜尋</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="row">
+      <div class="col-md-2">
+        <nav id="side-navbar" class="navbar navbar-expand-lg navbar-light bg-light">    
+          <div class="">
+            <ul class="navbar-nav mr-auto flex-column">
+              <li class="nav-item">
+                  <a class="nav-link active" href="./current-shifts.html">目前班表/變更打卡狀態<span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./add-shifts.html">新增班表</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./delete-shifts.html">刪除班表</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+
+      <div class="col-1"></div>
+      
+      <div class="col shifts-main-content">
+        <div id="btn-group" class="row">
+          <button type="button" class="col-2 btn btn-info btn-lg" onclick="Lib.current_shifts.displayPreviousWeek()">前一週</button>
+          <div class="col"></div>
+          <button type="button" class="col-2 btn btn-info btn-lg" onclick="Lib.current_shifts.displayNextWeek()">下一週</button>
+        </div>
+
+        <table id="shift-table">
+          
+        </table>
+
+        <div id="loading-hint" class="text-center">載入中...</div>
+      </div>
+
+      <div id="status" class="col-3">
+        <div id="status-string"></div>
+        <div id="status-penalty"></div>
+
+        <form id="update-status-form">
+          <div class="form-group">
+            <label for="update-status-select">狀態</label>
+            <select class="form-control" id="update-status-select">
+              <option style="color: rgb(220, 53, 69);" onclick="Lib.current_shifts.onUpdateStatusFormOptionClick()">無故缺席</option>
+              <option style="color: rgb(23, 162, 184);" onclick="Lib.current_shifts.onUpdateStatusFormOptionClick()">忘記打卡</option>
+              <option style="color: rgb(255, 87, 34);" onclick="Lib.current_shifts.onUpdateStatusFormOptionClick()">遲到</option>
+              <option style="color: rgb(40, 167, 69);" onclick="Lib.current_shifts.onUpdateStatusFormOptionClick()">準時</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="update-penalty-input">懲罰</label>
+            <input type="number" class="form-control" id="update-penalty-input" placeholder="enter penalty">
+          </div>
+
+          <div class="form-group">
+            <button type="reset" class="btn btn-primary" onclick="Lib.current_shifts.updateStatus()">更新</button>
+            <button type="reset" class="btn btn-secondary" onclick="Lib.current_shifts.clearUpdateStatusForm()">取消</button>
+          </div>
+          
+          <div class="form-group">
+            <button type="reset" class="btn btn-danger" onclick="Lib.current_shifts.deleteShift()">刪除</button>
+          </div>
+        </form>
+      </div>
+    </div> 
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.717.0.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="./current_shifts.bundle.js"></script>
+    <script>
+      console.log(Lib)
+      Lib.current_shifts.changeShifts();
+    </script>
+  </body>
+</html>
