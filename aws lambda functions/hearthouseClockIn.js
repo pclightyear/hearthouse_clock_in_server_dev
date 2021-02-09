@@ -43,14 +43,15 @@ exports.handler = async (event) => {
   console.log(event);
   let name = event.name || JSON.parse(event).name;
   let ts = Date.now().toString();
-  // let ts = event.ts || JSON.parse(event).name || Date.now().toString();
+  // let ts = event.ts || JSON.parse(event).ts || Date.now().toString();
   console.log(`Name: ${name}`)
   console.log(`Ts: ${ts}`)
   
   var tsStart = new Date(parseInt(ts));
-  tsStart.setHours(0, 0, 0); // GMT+8 8am
   var tsEnd = new Date(tsStart.getTime());
-  tsEnd.setDate(tsEnd.getDate() + 1);
+  tsStart.setHours(tsStart.getHours() - 1); // 1 hr before
+  tsEnd.setHours(0, 0, 0);
+  tsEnd.setDate(tsEnd.getDate() + 1); // next day 8 a.m.
   
   // insert logs to db
   var insert_params = {
@@ -135,10 +136,10 @@ function returnToApp(success, isTooEarly, noShift, name) {
 }
 
 const PENALTY_MAX = 60 * 60;
+const SHIFT_GAP_MAX = 70 * 60 * 1000;
 
 function updateDBStatus(shifts, name, clock_in_ts) {
   // 亂打卡
-  // TODO
   if (shifts.length == 0) {
     return handleNoShiftUpdate(name);
   }
@@ -146,129 +147,47 @@ function updateDBStatus(shifts, name, clock_in_ts) {
   // console.log(shifts)
   
   var shift_ts = parseInt(shifts[0].ts.N);
-  let [statusClockIn, isTooEarly, penalty] = checkLate(clock_in_ts, shift_ts)
+  let [isTooEarly, penalty] = checkLate(clock_in_ts, shift_ts)
+  
+  if (isTooEarly) {
+    return handleEarlyClockIn(name)
+  }
   
   let ExprAttrName = {
     "#S": "statusClockIn", 
     "#P": "penalty"
   }
   
-  // TODO
-  if (isTooEarly) {
-    return;
-  }
-  
-  if (shifts[0].checkNextTwoShifts.BOOL) {  // ooo
-    // update shifts[0]
-    var params1 = {
-      ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(statusClockIn, (penalty > PENALTY_MAX ? PENALTY_MAX : penalty)),
-      Key: getKey(name, shifts[0].ts.N), 
-      // ReturnValues: "ALL_NEW", 
-      TableName: shiftTableName, 
-      UpdateExpression: "SET #S = :s, #P = :p"
-    };
-    
-    penalty -= PENALTY_MAX;
-    if (penalty < 0) {
-      penalty = 0
+  var i;
+  var promises = [];
+  for (i = 0; i < shifts.length; i++) {
+    // check if there is consecutive shift
+    // if so, batch update is needed
+    // if not, we can break the loop
+    if (i >= 1 && shifts[i].ts.N - shifts[i-1].ts.N > SHIFT_GAP_MAX) {
+      break;
     }
     
-    // update shifts[1]
-    var params2 = {
-      ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(
-        (penalty > 0 ? CLOCK_IN_STATUS.LATE : CLOCK_IN_STATUS.NORMAL),
-        (penalty > PENALTY_MAX ? PENALTY_MAX : penalty)
-        ),
-      Key: getKey(name, shifts[1].ts.N), 
-      // ReturnValues: "ALL_NEW", 
-      TableName: shiftTableName, 
-      UpdateExpression: "SET #S = :s, #P = :p"
-    };
-    
-    penalty -= PENALTY_MAX;
-    
-    // update shifts[2]
-    var params3 = {
-      ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(
-        (penalty > 0 ? CLOCK_IN_STATUS.LATE : CLOCK_IN_STATUS.NORMAL),
-        (penalty > 0 ? penalty : 0)
-        ),
-      Key: getKey(name, shifts[2].ts.N), 
-      // ReturnValues: "ALL_NEW", 
-      TableName: shiftTableName, 
-      UpdateExpression: "SET #S = :s, #P = :p"
-    };
-    
-    var promise1 = dynamodb.updateItem(params1).promise()
-    var promise2 = dynamodb.updateItem(params2).promise()
-    var promise3 = dynamodb.updateItem(params3).promise()
-    
-    return Promise.all([promise1, promise2, promise3])
-      .then(res => {
-        return returnToApp(true, false, false, name)
-      })
-      .catch(err => {
-        printDividingLine("DB updateItem FAIL")
-        console.log(err);
-      
-        return sendErrToSNS(err, name, clock_in_ts);
-      })
-    
-    
-  } else if (shifts[0].checkOnlyNextShift.BOOL) { // oo
-    // update shifts[0]
-    var params1 = {
-      ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(statusClockIn, (penalty > PENALTY_MAX ? PENALTY_MAX : penalty)),
-      Key: getKey(name, shifts[0].ts.N), 
-      // ReturnValues: "ALL_NEW", 
-      TableName: shiftTableName, 
-      UpdateExpression: "SET #S = :s, #P = :p"
-    };
-    
-    penalty -= PENALTY_MAX;
-    
-    // update shifts[1]
-    var params2 = {
-      ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(
-        (penalty > 0 ? CLOCK_IN_STATUS.LATE : CLOCK_IN_STATUS.NORMAL),
-        (penalty > 0 ? penalty : 0)
-        ),
-      Key: getKey(name, shifts[1].ts.N), 
-      // ReturnValues: "ALL_NEW", 
-      TableName: shiftTableName, 
-      UpdateExpression: "SET #S = :s, #P = :p"
-    };
-    
-    var promise1 = dynamodb.updateItem(params1).promise()
-    var promise2 = dynamodb.updateItem(params2).promise()
-    
-    return Promise.all([promise1, promise2])
-      .then(res => {
-        return returnToApp(true, false, false, name)
-      })
-      .catch(err => {
-        printDividingLine("DB updateItem FAIL")
-        console.log(err);
-      
-        return sendErrToSNS(err, name, clock_in_ts);
-      })
-    
-  } else {  // o
     var params = {
       ExpressionAttributeNames: ExprAttrName,
-      ExpressionAttributeValues: getExprAttrVal(statusClockIn, penalty),
-      Key: getKey(name, shifts[0].ts.N), 
-      // ReturnValues: "ALL_NEW", 
+      ExpressionAttributeValues: getExprAttrVal(
+        (penalty > 0 ? CLOCK_IN_STATUS.LATE : CLOCK_IN_STATUS.NORMAL),
+        (penalty < 0 ? 0 : penalty)
+      ),
+      Key: getKey(name, shifts[i].ts.N), 
       TableName: shiftTableName, 
       UpdateExpression: "SET #S = :s, #P = :p"
     };
     
-    return dynamodb.updateItem(params).promise()
+    penalty -= PENALTY_MAX;
+    
+    var promise = dynamodb.updateItem(params).promise();
+    promises.push(promise);
+  }
+  
+  console.log(promises)
+  
+  return Promise.all(promises)
       .then(res => {
         return returnToApp(true, false, false, name)
       })
@@ -278,7 +197,6 @@ function updateDBStatus(shifts, name, clock_in_ts) {
       
         return sendErrToSNS(err, name, clock_in_ts);
       })
-  }
   
   function getExprAttrVal(s, p) {
     return {
@@ -309,28 +227,24 @@ function updateDBStatus(shifts, name, clock_in_ts) {
 const EARLY_CHECK = -40 * 60;
 
 function checkLate(clock_in_ts, shift_ts) {
-  var statusClockIn = CLOCK_IN_STATUS.ABSENCE;
   var isTooEarly = false;
   var penalty = Math.ceil((clock_in_ts - shift_ts) / 1000);
   
   if (penalty < EARLY_CHECK) {
     isTooEarly = true;
-  } else if (penalty > 0) {
-    statusClockIn = CLOCK_IN_STATUS.LATE;
-  } else {
-    statusClockIn = CLOCK_IN_STATUS.NORMAL;
   }
   
-  if (penalty < 0) {
-    penalty = 0;
-  }
-  
-  return [statusClockIn, isTooEarly, penalty]
+  return [isTooEarly, penalty]
 }
 
 function handleNoShiftUpdate(name) {
   printDividingLine("no shifts available")
   return returnToApp(false, false, true, name)
+}
+
+function handleEarlyClockIn(name) {
+  printDividingLine("too early clock in")
+  return returnToApp(false, true, false, name)
 }
 
 function sendErrToSNS(err, name, ts) {
