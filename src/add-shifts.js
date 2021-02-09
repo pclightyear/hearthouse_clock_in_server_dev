@@ -11,6 +11,7 @@ if (config.DEVELOPMENT) {
     var BucketName = config.DEV.BucketName;
     var NameListFileKey = config.DEV.NameListFileKey;
     var ShiftListFileKey = config.DEV.ShiftListFileKey;
+    var ShiftTableName = config.DEV.ShiftTableName;
 } else {
     var PRODUCTION = true;
     var awsRegion = config.PROD.awsRegion;
@@ -18,6 +19,7 @@ if (config.DEVELOPMENT) {
     var BucketName = config.PROD.BucketName;
     var NameListFileKey = config.PROD.NameListFileKey;
     var ShiftListFileKey = config.PROD.ShiftListFileKey;
+    var ShiftTableName = config.PROD.ShiftTableName;
 }
 
 var nameList = [];
@@ -138,6 +140,12 @@ function loadSuccessUIChange() {
     if (fetchNameListSuccess && fetchShiftListSuccess && populateDateFormSuccess) {
         displayButtons();
         removeLoadingHint();
+        if (!PRODUCTION) {
+            document.getElementById(START_SELECT_MONTH).selectedIndex = 2;
+            document.getElementById(START_SELECT_DAY).selectedIndex = 8;
+            document.getElementById(END_SELECT_MONTH).selectedIndex = 2;
+            document.getElementById(END_SELECT_DAY).selectedIndex = 12;
+        }
     }
 }
 
@@ -331,7 +339,6 @@ export function updateShifts() {
     shifts_index.forEach(row => {
         var name_index = row[0] - 1;
         var shift_indices = [...row[1]]
-        var checkNextShiftStatus = []
 
         if (name_index == -1) {
             isSomeRowNoName = true;
@@ -342,10 +349,6 @@ export function updateShifts() {
             isSomeRowNoShift = true;
             return;
         }
-
-        getNextShiftStatus(shift_indices).forEach(s => {
-            checkNextShiftStatus.push(s);
-        });
 
         var currentDate = new Date(startDate);
         
@@ -363,8 +366,6 @@ export function updateShifts() {
                                 "Item": {
                                     "name": {"S": nameList[name_index]},
                                     "ts": {"N": nextShift.getTime().toString()},
-                                    "checkNextTwoShifts": {"BOOL": checkNextShiftStatus[i].checkNextTwoShifts},
-                                    "checkOnlyNextShift": {"BOOL": checkNextShiftStatus[i].checkOnlyNextShift},
                                     "statusClockIn": {"N": CLOCK_IN_STATUS.ABSENCE.toString()},
                                     "statusChangeShift": {"N": CHANGE_SHIFT_STATUS.NORMAL.toString()},
                                     "penalty": {"N": "3600"}
@@ -382,7 +383,7 @@ export function updateShifts() {
             shift_requests.push(s)
         });
 
-        console.log(shift_indices);
+        // console.log(shift_indices);
         
         shift_indices.forEach(shift_index => {
             err_request_info.push(`${nameList[name_index]}   ${shiftInfoList[shift_index-Math.ceil((shift_index) / 13)].display}`)  // get correct info
@@ -409,7 +410,7 @@ export function updateShifts() {
     var empty_requests = [];
     var finished_requests = 0;
     shift_requests.forEach((shifts, i) => {
-        console.log(shifts)
+        // console.log(shifts)
 
         if (shifts.length == 0) {
             finished_requests += 1;
@@ -421,14 +422,14 @@ export function updateShifts() {
                 Payload: JSON.stringify({
                     "requests": {
                         "RequestItems": {
-                            "HeartHouseClockInShifts": shifts
+                            [ShiftTableName]: shifts
                         }
                     },
                     "errorMsg": err_request_info[i]
                 }), 
             };
     
-            // console.log(params);
+            console.log(params);
     
             lambda.invoke(params, (err, data) => {
                 finished_requests += 1;
@@ -466,77 +467,6 @@ export function updateShifts() {
             }
         }
     })
-}
-
-function getNextShiftStatus(shift_indices) {
-    var status = []
-    var indices = shift_indices.slice();
-    // even if shift_indices.length < 3, this function
-    // still produce result that could works
-    if (indices.length == 1) {
-        indices.push(100000)
-        indices.push(100000)
-    }
-
-    if (indices.length == 2) {
-        indices.push(100000)
-    }
-
-    // calculate checkpoints
-    if (indices[0] + 1 == indices[1]) {
-        // ooo all shifts are adjacent
-        if (indices[1] + 1 == indices[2]) {
-            status.push({
-                "checkNextTwoShifts": true,
-                "checkOnlyNextShift": false    
-            })
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": false    
-            })
-        } 
-        // oo o the first two shifts is adjacent
-        else {
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": true    
-            })
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": false    
-            })
-        }
-    } else {
-        // o oo the last two shifts is adjacent
-        if (indices[1] + 1 == indices[2]) {
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": false 
-            })
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": true   
-            })
-        } 
-        // o o o no shifts are adjacent
-        else {
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": false 
-            })
-            status.push({
-                "checkNextTwoShifts": false,
-                "checkOnlyNextShift": false    
-            })
-        }
-    }
-
-    status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false    
-    })
-
-    return status;
 }
 
 function getNextCheckPointOrShift(currentDate, weekday, hour, min) {
