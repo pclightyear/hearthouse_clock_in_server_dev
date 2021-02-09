@@ -4,9 +4,15 @@ import './delete-shifts.css';
 const config = require('./config.json');
 var AWS = require('aws-sdk');
 
-var awsRegion = config.awsRegion;
-var IdentityPoolId = config.IdentityPoolId;
-var PRODUCTION = true;
+if (config.DEVELOPMENT) {
+    var PRODUCTION = false;
+    var awsRegion = config.DEV.awsRegion;
+    var IdentityPoolId = config.DEV.IdentityPoolId;
+} else {
+    var PRODUCTION = true;
+    var awsRegion = config.PROD.awsRegion;
+    var IdentityPoolId = config.PROD.IdentityPoolId;
+}
 
 var DELETE_CONFIRM_TEXT = "deleteAllShift";
 

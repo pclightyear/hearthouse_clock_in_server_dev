@@ -31,16 +31,21 @@ import './statistics.css';
 const config = require('./config.json');
 var AWS = require('aws-sdk');
 
-var awsRegion = config.awsRegion;
-var IdentityPoolId = config.IdentityPoolId;
-var BucketName = config.BucketName;
-var NameListFileKey = config.NameListFileKey;
-var shiftTableName = config.ShiftTableName;
+if (config.DEVELOPMENT) {
+    var PRODUCTION = false;
+    var awsRegion = config.DEV.awsRegion;
+    var IdentityPoolId = config.DEV.IdentityPoolId;
+    var shiftTableName = config.DEV.ShiftTableName;
+} else {
+    var PRODUCTION = true;
+    var awsRegion = config.PROD.awsRegion;
+    var IdentityPoolId = config.PROD.IdentityPoolId;
+    var shiftTableName = config.PROD.ShiftTableName;
+}
 
-var PRODUCTION = true;
-var nameList = [];
+// var nameList = [];
 var shiftList = [];
-var shiftInfoList = [];
+// var shiftInfoList = [];
 
 AWS.config.update({
     region: awsRegion,

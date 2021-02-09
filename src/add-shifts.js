@@ -4,13 +4,22 @@ import './add-shifts.css';
 const config = require('./config.json');
 var AWS = require('aws-sdk');
 
-var awsRegion = config.awsRegion;
-var IdentityPoolId = config.IdentityPoolId;
-var BucketName = config.BucketName;
-var NameListFileKey = config.NameListFileKey;
-var ShiftListFileKey = config.ShiftListFileKey;
+if (config.DEVELOPMENT) {
+    var PRODUCTION = false;
+    var awsRegion = config.DEV.awsRegion;
+    var IdentityPoolId = config.DEV.IdentityPoolId;
+    var BucketName = config.DEV.BucketName;
+    var NameListFileKey = config.DEV.NameListFileKey;
+    var ShiftListFileKey = config.DEV.ShiftListFileKey;
+} else {
+    var PRODUCTION = true;
+    var awsRegion = config.PROD.awsRegion;
+    var IdentityPoolId = config.PROD.IdentityPoolId;
+    var BucketName = config.PROD.BucketName;
+    var NameListFileKey = config.PROD.NameListFileKey;
+    var ShiftListFileKey = config.PROD.ShiftListFileKey;
+}
 
-var PRODUCTION = true;
 var nameList = [];
 var shiftInfoList = [];
 var formIndex = 0;

@@ -15,13 +15,22 @@ import './search-logs.css';
 const config = require('./config.json');
 var AWS = require('aws-sdk');
 
-var awsRegion = config.awsRegion;
-var IdentityPoolId = config.IdentityPoolId;
-var BucketName = config.BucketName;
-var NameListFileKey = config.NameListFileKey;
-var logTableName = config.LogTableName;
+if (config.DEVELOPMENT) {
+    var PRODUCTION = false;
+    var awsRegion = config.DEV.awsRegion;
+    var IdentityPoolId = config.DEV.IdentityPoolId;
+    var BucketName = config.DEV.BucketName;
+    var NameListFileKey = config.DEV.NameListFileKey;
+    var logTableName = config.DEV.LogTableName;
+} else {
+    var PRODUCTION = true;
+    var awsRegion = config.PROD.awsRegion;
+    var IdentityPoolId = config.PROD.IdentityPoolId;
+    var BucketName = config.PROD.BucketName;
+    var NameListFileKey = config.PROD.NameListFileKey;
+    var logTableName = config.PROD.LogTableName;
+}
 
-var PRODUCTION = true;
 var nameList = [];
 var logList = [];
 var monthStrToNum = {
