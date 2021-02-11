@@ -38,7 +38,6 @@ const snsTopicARN = "your topic arn";
 // End of Filling
 // --------------------------
 
-const axios = require('axios');
 const aws = require('aws-sdk');
 
 const dynamodb = new aws.DynamoDB({
@@ -51,7 +50,6 @@ const sns = new aws.SNS({
     apiVersion: '2010-03-31'
 });
 
-// const googleTsOffset = 2209190400;
 const shiftCntNotSameErr = "請假班表 與 代/換班表 數量不一樣";
 const changeShiftErr = "換班班表有誤";
 const leaveShiftsNotFoundErr = "請假班表不存在";
@@ -77,6 +75,33 @@ const LAMBDA_ERROR_TYPE = {
     "GOOGLE_FORM_FAIL": 1,
     "FORM_ERROR": 2,
 }
+
+var metadata = [
+	"時間戳記", 
+	"換班 or 代班?",
+	"請假事由",
+	"請假人",
+	"換/代班人",   
+	"請假日期1",
+	"請假時段1",
+	"請假日期2",
+	"請假時段2",    
+	"請假日期3",
+	"請假時段3",    
+	"換班日期1",
+	"換班時段1", 
+	"換班日期2",
+	"換班時段2", 
+	"換班時段3",
+	"換班日期3",
+  "補班日期1",
+  "補班時段1",
+  "補班日期2",
+  "補班時段2",
+  "補班日期3",
+  "補班時段3",
+  "請問你確定要送出請假表單了嗎?"
+]
 
 const CHINESE_WEEKDAY_TO_NUM = {
   "週一": 1,
@@ -116,127 +141,63 @@ const PENALTY = "3600"
 var metadata;
 
 exports.handler = async (event) => {
-  const key = "2PACX-1vQp7gqWBLVnOs6l82xca9F3f2xuJc8vmqbRfA23h72N1FarJsYv-RiqTKpP7fzULBklWORA38pirpN3";
-  const url = `https://docs.google.com/spreadsheets/d/e/${key}/pub?output=tsv`;
+  console.log("hearthouseChangeShifts");
 
-  return axios.get(url)
+  var entry = event.data || JSON.parse(event.body).data;
+  console.log(entry);
+
+  let [leaveShifts, coverShifts, makeupShifts] = processPeriods(entry);
+
+  return checkAllShifts(entry, leaveShifts, coverShifts)
     .then(res => {
-      var lines = []
-      var lines = res.data.split('\n');
-      var data = [];
-      // const regex = /\r/gi;
+      printDividingLine("checkAllShifts success");
       
-      console.log(res.data)
-      
-      // for (var d in res.data) {
-      //   for (var item in d) {
-      //     if (item.includes('立俞')) {
-      //       console.log(d)
-      //     }
-      //   }
-      // }
-      
-      for(var i = 0; i < lines.length; i++) {
-        lines[i] = lines[i].replace('\r', '');
-        data.push(lines[i].split('\t'));
-      }
-      
-      metadata = Array.from(data[0]);
-      data.shift();
-      
-      // console.log(metadata);
-      // console.log(data);
-  
-      var params = {
-        ExpressionAttributeNames: {
-         "#TS": "ts", 
-         "#S": "status"
-        }, 
-        ProjectionExpression: "#TS, #S", 
-        TableName: changeShiftLogtableName
-      };
-      
-      return dynamodb.scan(params).promise()
+      return changeShiftDBstate(res, res.entry, makeupShifts)
         .then(res => {
-          var logs = res.Items;
-          var data_to_update = data.slice(logs.length);
-          var updatePromises = [];
-          
-          // for (var i=0; i<data_to_update.length; i++) {
-          //   var entry = data_to_update[i];
-          //   let [leaveShifts, coverShifts, makeupShifts, makeupPeriodsNextShiftStatus] = processPeriods(entry);
-            
-          //   // 處理非同步
-          //   updatePromises.push(
-          //     checkAllShifts(entry, leaveShifts, coverShifts)
-          //       .then(res => {
-          //         printDividingLine("checkAllShifts success");
-                  
-          //         return changeShiftDBstate(res, res.entry, makeupShifts, makeupPeriodsNextShiftStatus)
-          //           .then(res => {
-          //             // 新增 log 至 HeartHouseChangeShiftLogs
-          //             return addLogToChangeShiftDB(res.entry, true);
-          //           })
-          //           .catch(err => {
-          //             var errMsg = 
-          //               getDividingLineStr("CHANGE SHIFT FAIL") + 
-          //               err.toString() +
-          //               getDividingLineStr();
-                        
-          //             console.log(errMsg)
-
-          //             // return sendErrToSNS(LAMBDA_ERROR_TYPE.AWS_FAIL, errMsg)
-          //           })
-                  
-          //       })
-          //       .catch(err => {
-          //         var errMsg = 
-          //           getDividingLineStr("checkAllShifts FAIL") + 
-          //           err.msg.toString() + '\n' + 
-          //           getDividingLineStr();
-          //         printDividingLine(errMsg);
-                    
-          //         return addLogToChangeShiftDB(err.entry, false, errMsg);
-          //       })
-          //   )
-          // }
-          
-          // return Promise.all(updatePromises)
-          //   .then(values => {
-          //     printDividingLine("UPDATE ALL SUCCESS")
-          //     printDividingLine(Date().toString())
-          //     return {
-          //       statusCode: 200,
-          //       success: true,
-          //       body: "更新代/換班狀態",
-          //   };
-          //   })
-          //   .catch(err => {
-          //     var errMsg = 
-          //       getDividingLineStr("UPDATE FAIL") +
-          //       err.toString() + '\n' + 
-          //       getDividingLineStr();
-              
-          //     // return sendErrToSNS(LAMBDA_ERROR_TYPE.AWS_FAIL, errMsg)
-          //   })
-          
+          // 新增 log 至 HeartHouseChangeShiftLogs
+          return addLogToChangeShiftDB(res.entry, true)
+            .then(res => {
+              printDividingLine("UPDATE ALL SUCCESS")
+              printDividingLine(Date().toString())
+              return {
+                statusCode: 200,
+                success: true,
+                body: "更新代/換班狀態",
+              };
+            })
+            .catch(err => {
+              var errMsg = 
+                getDividingLineStr("ADD CHANGE SHIFT FAIL") + 
+                err.toString() +
+                getDividingLineStr();
+                
+              console.log(errMsg)
+    
+              return sendErrToSNS(LAMBDA_ERROR_TYPE.AWS_FAIL, errMsg)
+            })
         })
         .catch(err => {
           var errMsg = 
-            getDividingLineStr("SCAN CHANGE SHIFT DB FAIL") +
-            err.toString() + '\n' + // an error occurred
+            getDividingLineStr("CHANGE SHIFT FAIL") + 
+            err.toString() +
             getDividingLineStr();
           
+          printDividingLine()
+          console.log(errMsg)
+          printDividingLine()
+
           return sendErrToSNS(LAMBDA_ERROR_TYPE.AWS_FAIL, errMsg)
         })
+      
     })
     .catch(err => {
       var errMsg = 
-        getDividingLineStr("GET GOOGLE FORM FAIL") +
-        err.toString() + '\n' +
+        getDividingLineStr("checkAllShifts FAIL") + 
+        err.msg.toString() + '\n' + 
         getDividingLineStr();
-      
-      return sendErrToSNS(LAMBDA_ERROR_TYPE.GOOGLE_FORM_FAIL, errMsg)
+      console.log(errMsg);
+        
+      return addLogToChangeShiftDB(err.entry, false, errMsg);
     })
 };
 
@@ -244,9 +205,6 @@ function processPeriods(entry) {
   var leavePeriods = [];
   var coverPeriods = [];
   var makeupPeriods = [];
-  var makeupPeriodsNextShiftStatus = [];
-  
-  console.log(entry)
   
   leavePeriods.push(processDate(entry[5], entry[6]))
   leavePeriods.push(processDate(entry[7], entry[8]))
@@ -260,13 +218,11 @@ function processPeriods(entry) {
   makeupPeriods.push(processMakeupDate(entry[19], entry[20]))
   makeupPeriods.push(processMakeupDate(entry[21], entry[22]))
   
-  makeupPeriodsNextShiftStatus = getNextShiftStatus(entry)
-  
   leavePeriods = leavePeriods.filter(Boolean);
   coverPeriods = coverPeriods.filter(Boolean);
   makeupPeriods = makeupPeriods.filter(Boolean);
   
-  return [leavePeriods, coverPeriods, makeupPeriods, makeupPeriodsNextShiftStatus];
+  return [leavePeriods, coverPeriods, makeupPeriods];
 }
 
 function processDate(day, time) {
@@ -309,88 +265,6 @@ function processMakeupDate(day, time) {
   d.setHours(d.getHours() - 8);
   
   return d.getTime().toString();
-}
-
-function getNextShiftStatus(entry) {
-  var status = []
-  var indices = [];
-  // even if shift_indices.length < 3, this function
-  // still produce result that could works
-  
-  indices.push(getTimeIdx(entry[17], entry[18]))  // 補班日期&時段 1
-  indices.push(getTimeIdx(entry[19], entry[20]))  // 補班日期&時段 2
-  indices.push(getTimeIdx(entry[21], entry[22]))  // 補班日期&時段 3
-  
-  function getTimeIdx(date, time) {
-    if (!date || !time) {
-      return 10000;
-    }
-    
-    let [yyyy, mm, dd] = date.split('/')
-    let [weekdayStr, shiftStr] = time.split(' ')
-    let weekday = CHINESE_WEEKDAY_TO_NUM[weekdayStr] - 1;
-    let shiftIdx = SHIFT_STR_TO_IDX[shiftStr];
-    
-    return parseInt(yyyy) + parseInt(mm) + parseInt(dd) + (weekday * 12 + shiftIdx) + weekday;
-  }
-  
-  indices.sort(function(a, b){return a - b})
-  
-  // calculate checkpoints
-  if (indices[0] + 1 == indices[1]) {
-    // ooo all shifts are adjacent
-    if (indices[1] + 1 == indices[2]) {
-      status.push({
-        "checkNextTwoShifts": true,
-        "checkOnlyNextShift": false    
-      })
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false    
-      })
-    } 
-    // oo o the first two shifts is adjacent
-    else {
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": true    
-      })
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false    
-      })
-    }
-  } else {
-    // o oo the last two shifts is adjacent
-    if (indices[1] + 1 == indices[2]) {
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false 
-      })
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": true    
-      })
-    } 
-    // o o o no shifts are adjacent
-    else {
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false 
-      })
-      status.push({
-        "checkNextTwoShifts": false,
-        "checkOnlyNextShift": false    
-      })
-    }
-  }
-
-  status.push({
-    "checkNextTwoShifts": false,
-    "checkOnlyNextShift": false    
-  })
-
-  return status;
 }
 
 // 檢查是否可以換班 (DB內要有資料)
@@ -524,7 +398,7 @@ function checkShift(person, shifts) {
     })
 }
 
-function changeShiftDBstate(res, entry, makeupShifts, makeupPeriodsNextShiftStatus) {
+function changeShiftDBstate(res, entry, makeupShifts) {
   var leaveShiftItems = res.leaveShiftItems;
   var coverShiftItems = res.coverShiftItems;
   var requests_items = [];
@@ -556,8 +430,6 @@ function changeShiftDBstate(res, entry, makeupShifts, makeupPeriodsNextShiftStat
       requests_items.push({
         "name": coverName,
         "ts": item.ts,
-        "checkNextTwoShifts": item.checkNextTwoShifts,
-        "checkOnlyNextShift": item.checkOnlyNextShift,
         "statusClockIn": {"N": CLOCK_IN_STATUS.ABSENCE.toString()},
         "statusChangeShift": {"N": CHANGE_SHIFT_STATUS.NORMAL.toString()},
         "penalty": {"N": PENALTY}
@@ -568,8 +440,6 @@ function changeShiftDBstate(res, entry, makeupShifts, makeupPeriodsNextShiftStat
       requests_items.push({
         "name": leaveName,
         "ts": item.ts,
-        "checkNextTwoShifts": item.checkNextTwoShifts,
-        "checkOnlyNextShift": item.checkOnlyNextShift,
         "statusClockIn": {"N": CLOCK_IN_STATUS.ABSENCE.toString()},
         "statusChangeShift": {"N": CHANGE_SHIFT_STATUS.NORMAL.toString()},
         "penalty": {"N": PENALTY}
@@ -588,8 +458,6 @@ function changeShiftDBstate(res, entry, makeupShifts, makeupPeriodsNextShiftStat
       requests_items.push({
         "name": coverName,
         "ts": item.ts,
-        "checkNextTwoShifts": item.checkNextTwoShifts,
-        "checkOnlyNextShift": item.checkOnlyNextShift,
         "statusClockIn": {"N": CLOCK_IN_STATUS.ABSENCE.toString()},
         "statusChangeShift": {"N": CHANGE_SHIFT_STATUS.NORMAL.toString()},
         "penalty": {"N": PENALTY}
@@ -601,8 +469,6 @@ function changeShiftDBstate(res, entry, makeupShifts, makeupPeriodsNextShiftStat
       requests_items.push({
         "name": leaveName,
         "ts": { "N": ts },
-        "checkNextTwoShifts": {"BOOL": makeupPeriodsNextShiftStatus[i].checkNextTwoShifts },
-        "checkOnlyNextShift": {"BOOL": makeupPeriodsNextShiftStatus[i].checkOnlyNextShift },
         "statusClockIn": {"N": CLOCK_IN_STATUS.ABSENCE.toString()},
         "statusChangeShift": {"N": CHANGE_SHIFT_STATUS.NORMAL.toString()},
         "penalty": {"N": PENALTY}
