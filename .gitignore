@@ -2,3 +2,4 @@ node_modules
 dist/*.bundle.js
 src/config.json
 utils/name.json
+workspace*
