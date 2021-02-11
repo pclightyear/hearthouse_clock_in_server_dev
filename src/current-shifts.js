@@ -105,30 +105,8 @@ const dynamodb = new AWS.DynamoDB({
     apiVersion: "2012-08-10",
 });
 
-export function changeShifts() {
-    var params = {
-        FunctionName: "hearthouseChangeShifts", 
-        Payload: ""
-    };
-
-    lambda.invoke(params, (err, res) => {
-        if (err) {
-            console.log(err, err.stack) // an error occurred
-            displayErrorMsg()
-        } else {
-            if (res == null) {
-                // bad response
-                displayErrorMsg()
-            } else {
-                // update success
-                fetchAllShifts()             
-            }
-        }
-    })
-}
-
 // fetch shifts from dynamoDB
-function fetchAllShifts() {
+export function fetchAllShifts() {
     var params = {
         TableName: shiftTableName
     };
