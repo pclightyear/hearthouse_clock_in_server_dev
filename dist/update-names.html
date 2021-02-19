@@ -42,10 +42,10 @@
                   <a class="nav-link" href="./current-shifts.html">目前班表/變更打卡狀態</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="./update-names.html">更新值班志工名單</a>
+                <a class="nav-link active" href="./update-names.html">更新值班志工名單<span class="sr-only">(current)</span></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" href="./add-shifts.html">新增班表<span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="./add-shifts.html">新增班表</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="./delete-shifts.html">刪除班表</a>
@@ -58,59 +58,32 @@
       <div class="col-1"></div>
 
       <div class="col shifts-main-content">
-        <div id="form-groups"></div>
+				<h2>上傳值班志工名單</h2>
+				<ol>
+					<li>請上傳txt格式檔。</li>
+					<li>姓名請用換行符號(\n或按enter)隔開，並小心不要多打空白或tab。</li>
+					<li>
+						上傳檔案後按下「解析名單」，系統會自動分析名單檔案，並在畫面中顯示分析結果。
+						<br>請確認分析結果之後再按「上傳名單」進行上傳。
+					</li>
+				</ol>
+				
+				<form id="fileUploadForm">
+					<div class="mb-3">
+						<label for="fileInput" class="form-label">選擇名單上傳</label>
+						<input type="file" class="form-control" id="fileInput" accept="txt">
+					</div>
+					<button id="parseButton" type="button" class="btn btn-info" onclick="Lib.update_names.parseNameFile()">解析名單</button>
+				</form>
 
-        <form id="start-date-form">
-          <div class="form-row justify-content-center">
-    
-            <div class="col-3 my-1">
-              <select id="start-date-select-month" class="form-control">
-                <option selected>開始月份</option>
-              </select>
-            </div>
-    
-            <div class="col-3 my-1">
-              <select id="start-date-select-day" class="form-control">
-                <option selected>開始日期</option>
-              </select>
-            </div>
-          </div>
-        </form>
+        <div id="nameCheckDiv">
 
-        <form id="end-date-form">
-          <div class="form-row justify-content-center">
-    
-            <div class="col-3 my-1">
-              <select id="end-date-select-month" class="form-control">
-                <option selected>結束月份</option>
-              </select>
-            </div>
-    
-            <div class="col-3 my-1">
-              <select id="end-date-select-day" class="form-control">
-                <option selected>結束日期</option>
-              </select>
-            </div>
-          </div>
-        </form>
-      
-        <div id="new-line-btn" >
-          <div class="text-center">
-              <button id="sendButton" type="button submit" class="btn btn-success btn-lg text-center" onclick="Lib.add_shifts.addNewRow()">新增一行</button>
-          </div>
         </div>
-    
-        <div id="send-btn">
-          <div class="text-center">
-              <button id="sendButton" type="button submit" class="btn btn-primary btn-lg text-center" onclick="Lib.add_shifts.updateShifts()">送出!</button>
-          </div>
-        </div>
-
-        <div id="loading-hint" class="text-center">載入中...</div>
+				
+				<button id="uploadButton" type="reset" class="btn btn-primary" onclick="Lib.update_names.updateNameList()">上傳名單</button>
       </div>
-
+      
       <div class="col-3"></div>
-
     </div> 
 
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.717.0.min.js"></script>
@@ -118,11 +91,10 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="./add_shifts.bundle.js"></script>
+    <script type="text/javascript" src="./update_names.bundle.js"></script>
     <script>
-      Lib.add_shifts.fetchNameList();
-      Lib.add_shifts.fetchShiftList();
-      Lib.add_shifts.populateDateForm();
+      console.log(Lib)
+      Lib.update_names.resetUI();
     </script>
   </body>
 </html>

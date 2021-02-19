@@ -15,6 +15,7 @@ module.exports = {
         'index': './index.js',
         'statistics': './statistics',
         'current_shifts': './current-shifts.js',
+        'update_names': './update-names.js',
         'add_shifts': './add-shifts.js',
         'delete_shifts': './delete-shifts.js',
         'search_logs': './search-logs.js',

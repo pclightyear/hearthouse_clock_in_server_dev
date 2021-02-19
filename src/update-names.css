@@ -1,0 +1,14 @@
+#fileUploadForm {
+    margin-top: 3rem;
+}
+
+#nameCheckDiv {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    display: none;
+}
+
+#uploadButton {
+    margin-top: 1.5rem;
+    display: none;
+}
