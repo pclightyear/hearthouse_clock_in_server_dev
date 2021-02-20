@@ -84,6 +84,11 @@ export function updateNameList() {
             displayUpdateNameListFailMsg(err);
         }  
         else {
+            if (data == null) {
+                displayUpdateNameListFailMsg(`response is null`);
+                return;
+            }
+            
             console.log(JSON.parse(data.Payload))
             var res = JSON.parse(data.Payload)
             console.log(res.msg)

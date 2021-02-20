@@ -2,28 +2,23 @@ import './index.css';
 import './shifts.css';
 import './add-shifts.css';
 const config = require('./config.json');
+const shifts_utils = require('./shifts-min.json')
 var AWS = require('aws-sdk');
 
 if (config.DEVELOPMENT) {
     var PRODUCTION = false;
     var awsRegion = config.DEV.awsRegion;
     var IdentityPoolId = config.DEV.IdentityPoolId;
-    var BucketName = config.DEV.BucketName;
-    var NameListFileKey = config.DEV.NameListFileKey;
-    var ShiftListFileKey = config.DEV.ShiftListFileKey;
     var ShiftTableName = config.DEV.ShiftTableName;
 } else {
     var PRODUCTION = true;
     var awsRegion = config.PROD.awsRegion;
     var IdentityPoolId = config.PROD.IdentityPoolId;
-    var BucketName = config.PROD.BucketName;
-    var NameListFileKey = config.PROD.NameListFileKey;
-    var ShiftListFileKey = config.PROD.ShiftListFileKey;
     var ShiftTableName = config.PROD.ShiftTableName;
 }
 
 var nameList = [];
-var shiftInfoList = [];
+var shiftInfoList = shifts_utils.shiftList;
 var formIndex = 0;
 const shift_select_option_color = ['purple', 'red', 'blue', 'brown', '#ff8503']
 
@@ -54,59 +49,31 @@ var lambda = new AWS.Lambda({
     apiVersion: '2015-03-31'
 });
 
-var s3 = new AWS.S3({
-    apiVersion: '2006-03-01',
-});
-
 var fetchNameListSuccess = false;
 var fetchShiftListSuccess = false;
 var populateDateFormSuccess = false;
 
-// fetch name list from s3 bucket
+// fetch name list from dynamoDB
 export function fetchNameList() {
     var params = {
-        Bucket: BucketName, 
-        Key: NameListFileKey, 
+        FunctionName: "hearthouseGetNameList"
     };
 
-    s3.getObject(params, function(err, data) {
+    lambda.invoke(params, function(err, data) {
         if (err) {
             console.log(err, err.stack); // an error occurred
             displayErrorMsg()
-        } else {
-            var json = JSON.parse(data.Body.toString());
-            nameList = json.nameList;
+        }  
+        else {
+            var res = JSON.parse(data.Payload)
+            nameList = res.nameList;
+            nameList.sort()
         
             if (!nameList) {
                 displayErrorMsg()
             }
 
             fetchNameListSuccess = true;
-            loadSuccessUIChange();
-        }
-    });
-}
-
-// fetch shift list from s3 bucket
-export function fetchShiftList() {
-    var params = {
-        Bucket: BucketName, 
-        Key: ShiftListFileKey, 
-    };
-
-    s3.getObject(params, function(err, data) {
-        if (err) {
-            console.log(err, err.stack); // an error occurred
-            displayErrorMsg()
-        } else {
-            var json = JSON.parse(data.Body.toString());
-            shiftInfoList = json.shiftList;
-        
-            if (!shiftInfoList) {
-                displayErrorMsg()
-            }
-
-            fetchShiftListSuccess = true;
             loadSuccessUIChange();
         }
     });
@@ -137,7 +104,7 @@ export function populateDateForm() {
 }
 
 function loadSuccessUIChange() {
-    if (fetchNameListSuccess && fetchShiftListSuccess && populateDateFormSuccess) {
+    if (fetchNameListSuccess && populateDateFormSuccess) {
         displayButtons();
         removeLoadingHint();
         if (!PRODUCTION) {

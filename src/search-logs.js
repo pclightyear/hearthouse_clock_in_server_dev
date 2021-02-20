@@ -20,14 +20,12 @@ if (config.DEVELOPMENT) {
     var awsRegion = config.DEV.awsRegion;
     var IdentityPoolId = config.DEV.IdentityPoolId;
     var BucketName = config.DEV.BucketName;
-    var NameListFileKey = config.DEV.NameListFileKey;
     var logTableName = config.DEV.LogTableName;
 } else {
     var PRODUCTION = true;
     var awsRegion = config.PROD.awsRegion;
     var IdentityPoolId = config.PROD.IdentityPoolId;
     var BucketName = config.PROD.BucketName;
-    var NameListFileKey = config.PROD.NameListFileKey;
     var logTableName = config.PROD.LogTableName;
 }
 
@@ -61,30 +59,26 @@ var lambda = new AWS.Lambda({
     apiVersion: '2015-03-31'
 });
 
-var s3 = new AWS.S3({
-    apiVersion: '2006-03-01',
-});
-
 const dynamodb = new AWS.DynamoDB({
     apiVersion: "2012-08-10",
 });
 
-// fetch name list from s3 bucket
+// fetch name list from dynamoDB
 export function fetchNameList() {
     var params = {
-        Bucket: BucketName, 
-        Key: NameListFileKey, 
+        FunctionName: "hearthouseGetNameList"
     };
 
-    s3.getObject(params, function(err, data) {
+    lambda.invoke(params, function(err, data) {
         if (err) {
             console.log(err, err.stack); // an error occurred
             displayErrorMsg()
-        } else {
-            var json = JSON.parse(data.Body.toString());
-            nameList = json.nameList;
-            // console.log(nameList);
-        
+        }  
+        else {
+            var res = JSON.parse(data.Payload)
+            nameList = res.nameList;
+            nameList.sort()
+
             if (!nameList) {
                 displayErrorMsg()
             }
