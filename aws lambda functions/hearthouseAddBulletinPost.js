@@ -91,15 +91,19 @@ function processEntry(entry) {
   var author = entry[1];
   var title = entry[2]
   var content = entry[3];
-  var start_ts = dateToTS(entry[4]);
-  var end_ts = dateToTS(entry[5]);
+  var start_ts = dateToTS(entry[4], false);
+  var end_ts = dateToTS(entry[5], true);
   
   return [author, title, content, start_ts, end_ts];
 }
 
-function dateToTS(date) {
+function dateToTS(date, add_one) {
   let [yyyy, mm, dd] = date.split('/');
   var d = new Date(yyyy, mm-1, dd);
+  
+  if (add_one) {
+    d.setDate(d.getDate() + 1);
+  }
   
   return d.getTime().toString();
 }
