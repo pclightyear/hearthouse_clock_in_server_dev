@@ -86,6 +86,9 @@ function processItems(items) {
       "end_ts": items[i].end_ts.N
     })
   }
+  posts.sort((a, b) => {
+    return parseInt(a.ts) - parseInt(b.ts);
+  })
   
   return posts
 };
