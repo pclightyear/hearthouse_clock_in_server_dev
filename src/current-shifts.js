@@ -30,6 +30,7 @@ import './index.css';
 import './shifts.css';
 import './current-shifts.css';
 const config = require('./config.json');
+const shifts_utils = require('./shifts-min.json');
 var AWS = require('aws-sdk');
 
 if (config.DEVELOPMENT) {
@@ -50,7 +51,7 @@ if (config.DEVELOPMENT) {
 
 // var nameList = [];
 var shiftList = [];
-var shiftInfoList = [];
+var shiftInfoList = shifts_utils;
 
 const chineseWeekday = ["一", "二", "三", "四", "五"];
 const chineseClockInStatus = [
@@ -97,10 +98,6 @@ var lambda = new AWS.Lambda({
     apiVersion: '2015-03-31'
 });
 
-var s3 = new AWS.S3({
-    apiVersion: '2006-03-01',
-});
-
 const dynamodb = new AWS.DynamoDB({
     apiVersion: "2012-08-10",
 });
@@ -122,34 +119,10 @@ export function fetchAllShifts() {
                 displayErrorMsg()
             }
 
-            fetchShiftList();
-        }
-    });
-
-}
-
-// fetch shift list from s3 bucket
-function fetchShiftList() {
-    var params = {
-        Bucket: BucketName, 
-        Key: ShiftListFileKey, 
-    };
-    
-    s3.getObject(params, function(err, data) {
-        if (err) {
-            console.log(err, err.stack); // an error occurred
-            displayErrorMsg()
-        } else {
-            var json = JSON.parse(data.Body.toString());
-            shiftInfoList = json;
-            
-            if (!shiftInfoList) {
-                displayErrorMsg()
-            }
-
             displayAllShifts();
         }
     });
+
 }
 
 var SHIFT_TABLE = "shift-table";

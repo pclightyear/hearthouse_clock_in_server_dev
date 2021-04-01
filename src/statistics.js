@@ -58,10 +58,6 @@ var lambda = new AWS.Lambda({
     apiVersion: '2015-03-31'
 });
 
-var s3 = new AWS.S3({
-    apiVersion: '2006-03-01',
-});
-
 const dynamodb = new AWS.DynamoDB({
     apiVersion: "2012-08-10",
 });
