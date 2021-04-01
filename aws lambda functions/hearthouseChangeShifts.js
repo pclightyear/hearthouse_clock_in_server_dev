@@ -244,22 +244,23 @@ function processDate(day, time) {
 
 function processMakeupDate(day, time) {
   // day: 2020/8/8
-  // time: 週一 08:50-10:00
+  // time: 08:50-10:00
   if (!day || !time) {
     return;
   }
   
   let [yyyy, mm, dd] = day.split('/');
-  var timeSplit = time.split(' ');
-  let weekday = CHINESE_WEEKDAY_TO_NUM[timeSplit[0]];
-  var startTime = timeSplit[1].split('-');
+  // var timeSplit = time.split(' ');
+  // let weekday = CHINESE_WEEKDAY_TO_NUM[timeSplit[0]];
+  // var startTime = timeSplit[1].split('-');
+  var startTime = time.split('-');
   let [hh, min] = startTime[0].split(':');
   
   var d = new Date(yyyy, mm-1, dd, hh, min, 0);
   
-  if (d.getDay() != weekday) {
-    return;
-  }
+  // if (d.getDay() != weekday) {
+  //   return;
+  // }
    
   // UTC+8 -> UTC+0
   d.setHours(d.getHours() - 8);
