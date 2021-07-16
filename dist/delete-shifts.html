@@ -58,16 +58,76 @@
       <div class="col-1"></div>
 
       <div class="col shifts-main-content">
-          <h2>Danger Zone</h2>
-          <button type="button" class="col-2 btn btn-danger" onclick="Lib.delete_shifts.displayDeleteConfirmForm()">刪除全部班表</button>
+          <div id="delete-div">
+            <button type="button" class="col-2 btn btn-warning" onclick="Lib.delete_shifts.displayDeleteShiftsForm()">刪除部份班表</button>
+          
+            <div id="delete-form">
+              <div class="form-group">
+                <label for="delete-confirm-input">如果要刪除部份班表，請填入要刪除的日期區間，並在表格內輸入 "deleteShift" </label>
 
-          <form id="delete-confirm-form">
-            <div class="form-group">
-              <label for="delete-confirm-input">如果要刪除全部班表，請在表格內輸入 "deleteAllShift" </label>
-              <input type="text" class="form-control" id="delete-confirm-input" placeholder="enter deleteAllShift">
+                <form id="start-date-form">
+                  <div class="form-row justify-content-center">
+                    <div class="col-4 my-1">
+                      <select id="start-date-select-year" class="form-control">
+                        <option selected>開始年份</option>
+                      </select>
+                    </div>
+            
+                    <div class="col-4 my-1">
+                      <select id="start-date-select-month" class="form-control">
+                        <option selected>開始月份</option>
+                      </select>
+                    </div>
+            
+                    <div class="col-4 my-1">
+                      <select id="start-date-select-day" class="form-control">
+                        <option selected>開始日期</option>
+                      </select>
+                    </div>
+                  </div>
+                </form>
+
+                <form id="end-date-form">
+                  <div class="form-row justify-content-center">
+                    <div class="col-4 my-1">
+                      <select id="end-date-select-year" class="form-control">
+                        <option selected>結束年份</option>
+                      </select>
+                    </div>
+            
+                    <div class="col-4 my-1">
+                      <select id="end-date-select-month" class="form-control">
+                        <option selected>結束月份</option>
+                      </select>
+                    </div>
+            
+                    <div class="col-4 my-1">
+                      <select id="end-date-select-day" class="form-control">
+                        <option selected>結束日期</option>
+                      </select>
+                    </div>
+                  </div>
+                </form>
+
+                <input type="text" class="form-control" id="delete-confirm-input" placeholder="enter deleteShift">
+
+              </div>
+              <button type="reset" class="btn btn-warning" onclick="Lib.delete_shifts.deleteIntervalShifts()">刪除</button>
             </div>
-            <button type="reset" class="btn btn-danger" onclick="Lib.delete_shifts.deleteAllShifts()">刪除</button>
-          </form>
+          </div>
+          
+          <div id="delete-all-div">
+            <h2>Danger Zone</h2>
+            <button type="button" class="col-2 btn btn-danger" onclick="Lib.delete_shifts.displayDeleteAllShiftsConfirmForm()">刪除全部班表</button>
+
+            <form id="delete-all-confirm-form">
+              <div class="form-group">
+                <label for="delete-confirm-input">如果要刪除全部班表，請在表格內輸入 "deleteAllShift" </label>
+                <input type="text" class="form-control" id="delete-all-confirm-input" placeholder="enter deleteAllShift">
+              </div>
+              <button type="reset" class="btn btn-danger" onclick="Lib.delete_shifts.deleteAllShifts()">刪除</button>
+            </form>
+          </div>
       </div>
       
       <div class="col-3"></div>
@@ -80,7 +140,10 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
     <script type="text/javascript" src="./delete_shifts.bundle.js"></script>
     <script>
-      
+      window.onload = function () {
+        console.log(Lib);
+        Lib.delete_shifts.populateDateForm();
+      };
     </script>
   </body>
 </html>

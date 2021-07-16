@@ -1,4 +1,13 @@
-#delete-confirm-form {
+#delete-div {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+#delete-all-div {
+    margin-top: 5rem;
+}
+
+#delete-form, #delete-all-confirm-form  {
     margin-top: 1.5rem;
     display: none;
 }
