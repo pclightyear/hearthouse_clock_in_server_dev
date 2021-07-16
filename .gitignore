@@ -1,5 +1,5 @@
 node_modules
-dist/*.bundle.js
+dist/*.bundle.js*
 src/*.json
 utils/name.json
 workspace*
