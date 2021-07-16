@@ -207,14 +207,18 @@ export function displayNextWeek() {
 }
 
 function populateTableDate(currentDate) {
-    var friday = new Date(getFriday(currentDate));
+    // populate from friday
+    var currentPopulateDate = new Date(getFriday(currentDate));
 
     var i;
     for (i = 5; i > 0; i--) {
         var dateCell = document.getElementById(`${DATE_CELL}-${i}`);
-        dateCell.innerText = `${chineseWeekday[i-1]}\n${friday.getMonth()+1}/${friday.getDate()}`;
+        dateCell.innerText = 
+        `${chineseWeekday[i-1]}
+        ${currentPopulateDate.getUTCFullYear()}/${currentPopulateDate.getMonth()+1}/${currentPopulateDate.getDate()}
+        `;
         
-        friday.setDate(friday.getDate() - 1);
+        currentPopulateDate.setDate(currentPopulateDate.getDate() - 1);
     }
 }
 
