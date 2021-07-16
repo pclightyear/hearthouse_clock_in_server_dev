@@ -79,8 +79,10 @@ export function fetchNameList() {
     });
 }
 
+var START_SELECT_YEAR = "start-date-select-year";
 var START_SELECT_MONTH = "start-date-select-month";
 var START_SELECT_DAY = "start-date-select-day";
+var END_SELECT_YEAR = "end-date-select-year";
 var END_SELECT_MONTH = "end-date-select-month";
 var END_SELECT_DAY = "end-date-select-day";
 var FORM_GROUPS = "form-groups";
@@ -89,13 +91,17 @@ var SEND_BTN = "send-btn";
 var NEW_LINE_BTN = "new-line-btn";
 
 export function populateDateForm() {
+    var start_year_select = document.getElementById(START_SELECT_YEAR);
     var start_month_select = document.getElementById(START_SELECT_MONTH);
     var start_day_select = document.getElementById(START_SELECT_DAY);
+    var end_year_select = document.getElementById(END_SELECT_YEAR);
     var end_month_select = document.getElementById(END_SELECT_MONTH);
     var end_day_select = document.getElementById(END_SELECT_DAY);
 
+    populateYearSelect(start_year_select);
     populateMonthSelect(start_month_select);
     populateDaySelect(start_day_select);
+    populateYearSelect(end_year_select);
     populateMonthSelect(end_month_select);
     populateDaySelect(end_day_select);
 
@@ -123,6 +129,16 @@ function displayButtons() {
 
 function removeLoadingHint() {
     document.getElementById(LOADING_HINT).style.display = "none";
+}
+
+function populateYearSelect(year_select) {
+    var i;
+    for (i = 2020; i <= 2099; i++) {
+        var option = document.createElement("option");
+        var text = document.createTextNode(i);
+        option.appendChild(text);
+        year_select.appendChild(option);
+    }
 }
 
 function populateMonthSelect(month_select) {
@@ -246,29 +262,25 @@ function deleteRowEntry() {
     form_groups.removeChild(row_to_removed);
 }
 
+var YEAR_OFFSET = 2019;
+
 export function updateShifts() {
     // start date & end date
+    var startYear = document.getElementById(START_SELECT_YEAR).selectedIndex + YEAR_OFFSET;
     var startMonth = document.getElementById(START_SELECT_MONTH).selectedIndex;
     var startDay = document.getElementById(START_SELECT_DAY).selectedIndex;
+    var endYear = document.getElementById(END_SELECT_YEAR).selectedIndex + YEAR_OFFSET;
     var endMonth = document.getElementById(END_SELECT_MONTH).selectedIndex;
     var endDay = document.getElementById(END_SELECT_DAY).selectedIndex;
 
-    if (!startMonth || !startDay || !endMonth || !endDay) {
+    if (PRODUCTION && (!startYear || !startMonth || !startDay || !endYear || !endMonth || !endDay)) {
         displayNoDateErrMsg();
         return;
     }
 
     // console.log(`${startMonth}/${startDay} ~ ${endMonth}/${endDay}`);
-    let year = new Date().getFullYear()
-    let startDate = new Date(year, startMonth-1, startDay)
-    let endDate;
-
-    // cross year
-    if (startMonth > endMonth) {
-        endDate = new Date(year+1, endMonth-1, endDay, 23, 59, 59)
-    } else {
-        endDate = new Date(year, endMonth-1, endDay, 23, 59, 59)
-    }
+    let startDate = new Date(startYear, startMonth-1, startDay);
+    let endDate = new Date(endYear, endMonth-1, endDay, 23, 59, 59);
 
     if (startDate > endDate) {
         displayErrDateMsg();
