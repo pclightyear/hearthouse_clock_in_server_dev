@@ -107,6 +107,81 @@ function hideDeleteAllShiftsConfirmForm() {
 var DELETE_CONFIRM_TEXT = "deleteShift";
 var DELETE_CONFIRM_INTPUT = "delete-confirm-input";
 var YEAR_OFFSET = 2019;
+var BATCH_MAX_REQUESTS = 25;
+
+function deleteDynamoDBShiftItems(itemList, isAll) {
+    // batch delete
+    var shift_requests = []
+    var batch_requests = []
+
+    itemList.forEach(item => {
+        var name = item.name.S;
+        var ts = item.ts.N;
+
+        shift_requests.push({
+            "DeleteRequest": {
+                "Key": {
+                    "name": {"S": name},
+                    "ts": {"N": ts}
+                }
+            }
+        })
+    })
+
+    for (var i = 0; i < shift_requests.length; i += BATCH_MAX_REQUESTS) {
+        batch_requests.push(shift_requests.slice(i, i+BATCH_MAX_REQUESTS));
+    }
+    
+    console.log(batch_requests);
+    var num_finished_requests = 0;
+    var num_fail_requests = 0;
+
+    batch_requests.forEach((request, i) => {
+        var deleteParams = {
+            "RequestItems": {
+                [tableName]: request
+            }
+        }
+
+        dynamodb.batchWriteItem(deleteParams, (err, res) => {
+            num_finished_requests += 1;
+            
+            if (err) {
+                console.log(err, err.stack); // an error occurred
+                num_fail_requests += 1;
+            } else {
+                // check if there is no unprocessed items, 
+                // which is returned in dictionary data type
+                if (Object.keys(res.UnprocessedItems).length == 0) {
+                    console.log(`Batch ${i+1} delete success`);
+                } else {
+                    console.log(`Batch ${i+1} delete fail`);
+                    num_fail_requests += 1;
+                }
+        
+                checkIfDeleteShiftsAllProcessed();
+            }
+        })
+    })
+    
+    function checkIfDeleteShiftsAllProcessed() {
+        if (num_finished_requests == batch_requests.length) {
+            if (num_fail_requests == 0) {
+                if (isAll) {
+                    displayDeleteAllShiftsSuccessMsg();
+                } else {
+                    displayDeleteShiftsSuccessMsg();
+                }
+            } else {
+                if (isAll) {
+                    displayDeleteAllShiftsErrMsg();
+                } else {
+                    displayDeleteShiftsErrMsg();
+                }
+            }
+        }
+    }
+}
 
 export function deleteIntervalShifts() {
     var confirmText = document.getElementById(DELETE_CONFIRM_INTPUT).value;
@@ -153,7 +228,6 @@ export function deleteIntervalShifts() {
             TableName: tableName
         };
     
-        // TODO: need to await delete result to display suceess or error msg
         dynamodb.scan(scanParams, (err, res) => {
             if (err) {
                 console.log(err, err.stack); // an error occurred
@@ -168,39 +242,8 @@ export function deleteIntervalShifts() {
                     return;
                 }
     
-                console.log(itemList)
-        
-                // batch delete
-                var requests = []
-    
-                itemList.forEach(item => {
-                    var name = item.name.S;
-                    var ts = item.ts.N;
-    
-                    requests.push({
-                        "DeleteRequest": {
-                            "Key": {
-                                "name": {"S": name},
-                                "ts": {"N": ts}
-                            }
-                        }
-                    })
-                })
-    
-                var deleteParams = {
-                    "RequestItems": {
-                        [tableName]: requests
-                    }
-                }
-    
-                dynamodb.batchWriteItem(deleteParams, (err, res) => {
-                    if (err) {
-                        console.log(err, err.stack); // an error occurred
-                        displayDeleteShiftsErrMsg();
-                    } else {
-                        displayDeleteShiftsSuccessMsg();
-                    }
-                })
+                console.log(itemList);
+                deleteDynamoDBShiftItems(itemList, false); // not delete all shifts
             }
         });
     } else {
@@ -217,7 +260,6 @@ var DELETE_ALL_CONFIRM_INTPUT = "delete-all-confirm-input";
 export function deleteAllShifts() {
     var confirmText = document.getElementById(DELETE_ALL_CONFIRM_INTPUT).value;
     if (confirmText === DELETE_ALL_CONFIRM_TEXT) {
-        // TODO: need to await delete result to display suceess or error msg
         var scanParams = {
             TableName: tableName
         };
@@ -237,38 +279,7 @@ export function deleteAllShifts() {
                 }
     
                 console.log(itemList)
-        
-                // batch delete
-                var requests = []
-    
-                itemList.forEach(item => {
-                    var name = item.name.S;
-                    var ts = item.ts.N;
-    
-                    requests.push({
-                        "DeleteRequest": {
-                            "Key": {
-                                "name": {"S": name},
-                                "ts": {"N": ts}
-                            }
-                        }
-                    })
-                })
-    
-                var deleteParams = {
-                    "RequestItems": {
-                        [tableName]: requests
-                    }
-                }
-    
-                dynamodb.batchWriteItem(deleteParams, (err, res) => {
-                    if (err) {
-                        console.log(err, err.stack); // an error occurred
-                        displayDeleteAllShiftsErrMsg();
-                    } else {
-                        displayDeleteAllShiftsSuccessMsg();
-                    }
-                })
+                deleteDynamoDBShiftItems(itemList, true); // delete all shifts
             }
         });
     } else {
