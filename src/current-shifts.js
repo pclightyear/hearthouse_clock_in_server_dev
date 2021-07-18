@@ -191,6 +191,9 @@ function displayAllShifts() {
 export function displayPreviousWeek() {
     if (now) {
         now.setDate(now.getDate() - 7)
+        if (isUpdatingStatus) {
+            clearUpdateStatusForm()
+        }
         populateTableDate(now)
         clearTableCells()
         populateTableCells(now)
@@ -200,6 +203,9 @@ export function displayPreviousWeek() {
 export function displayNextWeek() {
     if (now) {
         now.setDate(now.getDate() + 7)
+        if (isUpdatingStatus) {
+            clearUpdateStatusForm()
+        }
         populateTableDate(now)
         clearTableCells()
         populateTableCells(now)
@@ -278,7 +284,12 @@ var UPDATE_PENALTY_INPUT = "update-penalty-input";
 var STATUS_STRING = "status-string";
 var STATUS_PENALTY = "status-penalty";
 
-function displayClockInStatus() {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function displayClockInStatus() {
+    await sleep(10)
     var status_string_div = document.getElementById(STATUS_STRING);
     var status_penalty_div = document.getElementById(STATUS_PENALTY);
     var shift_id;
@@ -403,7 +414,7 @@ export function updateStatus() {
     }
 }
 
-function clearUpdateStatusForm() {
+export function clearUpdateStatusForm() {
     isUpdatingStatus = false;
     document.getElementById(UPDATE_STATUS_FORM).style.display = "none";
     document.getElementById(`${SINGLE_SHIFT}-${updating_shift_id}`).style.backgroundColor = "";
