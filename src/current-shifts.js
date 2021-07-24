@@ -304,7 +304,7 @@ async function displayClockInStatus() {
     var status = parseInt(shift_info.statusClockIn.N);
 
     status_string_div.innerText = `狀態: ${chineseClockInStatus[parseInt(shift_info.statusClockIn.N)]}`;
-    status_penalty_div.innerText = `懲罰: ${Math.ceil(parseInt(shift_info.penalty.N)/60)}`;
+    status_penalty_div.innerText = `懲罰（分鐘）: ${Math.ceil(parseInt(shift_info.penalty.N)/60)}`;
 
     colorShiftStatus(status, status_string_div)
     colorShiftStatus(status, status_penalty_div)
@@ -369,8 +369,10 @@ export function onUpdateStatusFormOptionClick() {
 export function updateStatus() {
     var newStatus = document.getElementById(UPDATE_STATUS_SELECT).selectedIndex;
     var newPenalty = document.getElementById(UPDATE_PENALTY_INPUT).value;
+    newPenalty = newPenalty * 60;
+    console.log(newPenalty);
 
-    if(!newPenalty) {
+    if(typeof newPenalty != 'number') {
         displayUpdateStatusMissingPenaltyMsg()
         return;
     } else {
