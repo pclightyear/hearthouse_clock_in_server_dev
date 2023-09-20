@@ -3,7 +3,7 @@
 // --------------------------
 
 var awsRegion = 'your aws region'; // e.g. 'us-east-1'
-var nameTableName = 'your table name';
+const nameTableName = "HeartHouseNames";
 const snsTopicARN = "your topic arn";
 
 // --------------------------

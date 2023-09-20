@@ -30,8 +30,8 @@
 // --------------------------
 
 const awsRegion = 'your aws region'; // e.g. 'us-east-1'
-const changeShiftLogtableName = "your table name";
-const shiftTableName = "your table name";
+const changeShiftLogtableName = "HeartHouseChangeShiftLogs";
+const shiftTableName = "HeartHouseClockInShifts";
 const snsTopicARN = "your topic arn";
 
 // --------------------------

@@ -3,7 +3,7 @@
 // --------------------------
 
 const awsRegion = 'your aws region'; // e.g. 'us-east-1'
-const shiftTableName = "your table name";
+const shiftTableName = "HeartHouseClockInShifts";
 const snsTopicARN = "your topic arn";
 
 // --------------------------
